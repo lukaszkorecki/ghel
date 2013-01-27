@@ -1,4 +1,6 @@
 import xml.dom.minidom as minidom
+import os
+import popen2
 import urwid
 
 class Events:
@@ -21,7 +23,7 @@ class Events:
 			published = self.getText(self.getElement(entry, 'published'))
 			author = self.getText(self.getElement(self.getElement(entry,'author'), 'name'))
 
-			url = self.getElement(entry, 'link').attributes['href'].value
+			url = self.getElement(entry, 'link').attributes['href'].value.strip()
 
 			events.append((title, author, published, url))
 
@@ -31,17 +33,35 @@ class Events:
 		return node.getElementsByTagName(tag)[0]
 
 	def getText(self,element):
-		return element.firstChild.toprettyxml()
+		return element.firstChild.toprettyxml().strip()
 
 class UI:
 
-	def eventList(self, title, events):
+	def __init__(self, events):
+		self.events = events
+
+	def event_list(self, title, events):
 		""" builds the menu out of lines of text """
 		body = [urwid.Text(title), urwid.Divider()]
 		for event in events:
-			button = urwid.Button(event[0])
+			button = urwid.Button(self.print_event(event))
+			urwid.connect_signal(button, 'click', self.item_chosen, event)
 			body.append(urwid.AttrMap(button, None, focus_map='reversed'))
+
 		return urwid.ListBox(urwid.SimpleFocusListWalker(body))
+
+	def main(self, title):
+
+		self.main = urwid.Padding(self.event_list(title, self.events ), left=0, right=0)
+		return self.main
+
+	def print_event(self, event):
+		return "{1}: {0} @ {2}".format(*event)
+
+	def item_chosen(self, button, event):
+		popen2.popen3("open '{0}'".format(event[3]))
+		return
+
 
 
 path = "/Users/lukaszkorecki/Desktop/lukaszkorecki.private.atom.xml"
@@ -49,5 +69,4 @@ path = "/Users/lukaszkorecki/Desktop/lukaszkorecki.private.atom.xml"
 events  = Events.loadFromFile(path).extractEvents()
 
 
-main = urwid.Padding(UI().eventList("GH feed", events ), left=2, right=0)
-urwid.MainLoop(main, palette=[('reversed', 'standout', '')]).run()
+urwid.MainLoop(UI(events).main("GH feed"), palette=[('reversed', 'standout', '')]).run()
