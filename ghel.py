@@ -3,11 +3,11 @@ import urwid
 
 class Events:
 	@classmethod
-	def loadFromFile(self, path):
+	def loadFromFile(cls, path):
 		""" Convinence method for loading the feed from given file """
 		xml = open(path).read()
 		feed = minidom.parseString(xml)
-		return self(feed)
+		return cls(feed)
 
 	def __init__(self, xml):
 		self.dom_feed = xml
@@ -33,7 +33,21 @@ class Events:
 	def getText(self,element):
 		return element.firstChild.toprettyxml()
 
+class UI:
+
+	def eventList(self, title, events):
+		""" builds the menu out of lines of text """
+		body = [urwid.Text(title), urwid.Divider()]
+		for event in events:
+			button = urwid.Button(event[0])
+			body.append(urwid.AttrMap(button, None, focus_map='reversed'))
+		return urwid.ListBox(urwid.SimpleFocusListWalker(body))
+
+
 path = "/Users/lukaszkorecki/Desktop/lukaszkorecki.private.atom.xml"
 
-for event in Events.loadFromFile(path).extractEvents():
-	print "Title: {0} Author: {1} Published: {2} url: {3}".format(*event)
+events  = Events.loadFromFile(path).extractEvents()
+
+
+main = urwid.Padding(UI().eventList("GH feed", events ), left=2, right=0)
+urwid.MainLoop(main, palette=[('reversed', 'standout', '')]).run()
