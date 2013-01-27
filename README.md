@@ -2,7 +2,7 @@
 
 ### (GitHub Event Lister)
 
-(not sure about the lister part).
+(not sure about the lister part). Simple terminal interface to your GitHub event feed. Not even alpha quality.
 
 
 ## Usage
