@@ -1,11 +1,19 @@
 import xml.dom.minidom as minidom
-
+import urwid
 
 class Events:
+	@classmethod
+	def loadFromFile(self, path):
+		""" Convinence method for loading the feed from given file """
+		xml = open(path).read()
+		feed = minidom.parseString(xml)
+		return self(feed)
+
 	def __init__(self, xml):
 		self.dom_feed = xml
 
 	def extractEvents(self):
+		""" Parse xml and extract required informatio from feed. Returns a list of tuples (titile, author,published, url) """
 		entries = self.dom_feed.getElementsByTagName('entry')
 		events = []
 		for entry in entries:
@@ -25,9 +33,7 @@ class Events:
 	def getText(self,element):
 		return element.firstChild.toprettyxml()
 
+path = "/Users/lukaszkorecki/Desktop/lukaszkorecki.private.atom.xml"
 
-
-xml = open("/Users/lukaszkorecki/Desktop/lukaszkorecki.private.atom.xml").read()
-feed = minidom.parseString(xml)
-for event in Events(feed).extractEvents():
+for event in Events.loadFromFile(path).extractEvents():
 	print "Title: {0} Author: {1} Published: {2} url: {3}".format(*event)
