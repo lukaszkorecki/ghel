@@ -1,18 +1,13 @@
 import xml.dom.minidom as minidom
-import os
+import sys
 import popen2
+import urllib2
 import urwid
 
 class Events:
-	@classmethod
-	def loadFromFile(cls, path):
-		""" Convinence method for loading the feed from given file """
-		xml = open(path).read()
-		feed = minidom.parseString(xml)
-		return cls(feed)
+	def __init__(self, feed):
+		self.dom_feed = minidom.parseString(feed)
 
-	def __init__(self, xml):
-		self.dom_feed = xml
 
 	def extractEvents(self):
 		""" Parse xml and extract required informatio from feed. Returns a list of tuples (titile, author,published, url) """
@@ -63,10 +58,14 @@ class UI:
 		return
 
 
+class FeedDownloader():
+	def __init__(self, url):
+		self.url = url
 
-path = "/Users/lukaszkorecki/Desktop/lukaszkorecki.private.atom.xml"
 
-events  = Events.loadFromFile(path).extractEvents()
+	def get(self):
+		return urllib2.urlopen(self.url).read()
 
-
+feed = FeedDownloader(sys.argv[1]).get()
+events  = Events(feed).extractEvents()
 urwid.MainLoop(UI(events).main("GH feed"), palette=[('reversed', 'standout', '')]).run()
